@@ -1,0 +1,5 @@
+# ignore objects
+/**/obj
+
+# ignore assembly listings
+*.lst
