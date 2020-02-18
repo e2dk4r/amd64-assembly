@@ -1,0 +1,247 @@
+     1                                  %include "macros.asm" ; enviromental variables in linux
+     1                              <1> %define SYSIN 0
+     2                              <1> %define SYSOUT 1
+     3                              <1> 
+     4                              <1> %define SYS_READ 0
+     5                              <1> %define SYS_WRITE 1
+     6                              <1> %define SYS_EXIT 60
+     2                                  
+     3                                  SECTION .bss ; Section containing uninitialized data
+     4                                  	BUFFLEN equ 16
+     5 00000000 <res 00000010>          	Buff	resb BUFFLEN
+     6                                  
+     7                                  SECTION .data ; Section containing initialized data
+     8                                  
+     9                                  ; text line of hex dump utilty
+    10                                  ; first part displays 16 bytes in hex seperated by spaces
+    11                                  ; second part displays 16-character line
+    12                                  ; Note: if DumpLin is used seperatedly, append EOL
+    13 00000000 203030203030203030-     DumpLin:	db " 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 "
+    13 00000009 203030203030203030-
+    13 00000012 203030203030203030-
+    13 0000001B 203030203030203030-
+    13 00000024 203030203030203030-
+    13 0000002D 20303020           
+    14                                  DUMPLEN		equ $-DumpLin
+    15 00000031 7C2E2E2E2E2E2E2E2E-     ASCLin:		db "|................|", 0xa
+    15 0000003A 2E2E2E2E2E2E2E2E7C-
+    15 00000043 0A                 
+    16                                  ASCLEN		equ	$-ASCLin
+    17                                  FULLLEN		equ $-DumpLin
+    18                                  
+    19                                  ; HexDigits is used to convert numeric values to their hex
+    20                                  ; equivalents. Index by nybble without a scale: [HexDigits + eax]
+    21 00000044 303132333435363738-     HexDigits:	db "0123456789ABCDEF"
+    21 0000004D 39414243444546     
+    22                                  
+    23                                  ; This table is used for ASCII character translation, into the ASCII
+    24                                  ; portion of the hex dump line, via XLAT or ordinary memory lookup. 
+    25                                  ; All printable characters "play through" as themselves. The high 128 
+    26                                  ; characters are translated to ASCII period (2Eh). The non-printable
+    27                                  ; characters in the low 128 are also translated to ASCII period, as is
+    28                                  ; char 127.
+    29                                  DotXlat: 
+    30 00000054 2E2E2E2E2E2E2E2E2E-     	db 2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh
+    30 0000005D 2E2E2E2E2E2E2E     
+    31 00000064 2E2E2E2E2E2E2E2E2E-     	db 2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh
+    31 0000006D 2E2E2E2E2E2E2E     
+    32 00000074 202122232425262728-     	db 20h,21h,22h,23h,24h,25h,26h,27h,28h,29h,2Ah,2Bh,2Ch,2Dh,2Eh,2Fh
+    32 0000007D 292A2B2C2D2E2F     
+    33 00000084 303132333435363738-     	db 30h,31h,32h,33h,34h,35h,36h,37h,38h,39h,3Ah,3Bh,3Ch,3Dh,3Eh,3Fh
+    33 0000008D 393A3B3C3D3E3F     
+    34 00000094 404142434445464748-     	db 40h,41h,42h,43h,44h,45h,46h,47h,48h,49h,4Ah,4Bh,4Ch,4Dh,4Eh,4Fh
+    34 0000009D 494A4B4C4D4E4F     
+    35 000000A4 505152535455565758-     	db 50h,51h,52h,53h,54h,55h,56h,57h,58h,59h,5Ah,5Bh,5Ch,5Dh,5Eh,5Fh
+    35 000000AD 595A5B5C5D5E5F     
+    36 000000B4 606162636465666768-     	db 60h,61h,62h,63h,64h,65h,66h,67h,68h,69h,6Ah,6Bh,6Ch,6Dh,6Eh,6Fh
+    36 000000BD 696A6B6C6D6E6F     
+    37 000000C4 707172737475767778-     	db 70h,71h,72h,73h,74h,75h,76h,77h,78h,79h,7Ah,7Bh,7Ch,7Dh,7Eh,2Eh
+    37 000000CD 797A7B7C7D7E2E     
+    38 000000D4 2E2E2E2E2E2E2E2E2E-     	db 2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh
+    38 000000DD 2E2E2E2E2E2E2E     
+    39 000000E4 2E2E2E2E2E2E2E2E2E-     	db 2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh
+    39 000000ED 2E2E2E2E2E2E2E     
+    40 000000F4 2E2E2E2E2E2E2E2E2E-     	db 2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh
+    40 000000FD 2E2E2E2E2E2E2E     
+    41 00000104 2E2E2E2E2E2E2E2E2E-     	db 2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh
+    41 0000010D 2E2E2E2E2E2E2E     
+    42 00000114 2E2E2E2E2E2E2E2E2E-     	db 2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh
+    42 0000011D 2E2E2E2E2E2E2E     
+    43 00000124 2E2E2E2E2E2E2E2E2E-     	db 2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh
+    43 0000012D 2E2E2E2E2E2E2E     
+    44 00000134 2E2E2E2E2E2E2E2E2E-     	db 2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh
+    44 0000013D 2E2E2E2E2E2E2E     
+    45 00000144 2E2E2E2E2E2E2E2E2E-     	db 2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh,2Eh
+    45 0000014D 2E2E2E2E2E2E2E     
+    46                                  
+    47                                  SECTION .text ; Section containing code
+    48                                  GLOBAL _start
+    49                                  
+    50                                  ;===============================================================================
+    51                                  ; ClearLine:	clear hex dump line	string to 16 0 values
+    52                                  ; INPUT:		<none>
+    53                                  ; RETURN:		<none>
+    54                                  ; MODIFIES:		<none>
+    55                                  ; CALLS:		DumpChar
+    56                                  ; DESCRIPTION:	The hex dump line string is cleared to binary 0 by
+    57                                  ;				call DumpChar 16 times, passing it 0 each time
+    58                                  
+    59                                  ClearLine:
+    60 00000000 50                      	push	rax			; store used registers
+    61 00000001 52                      	push 	rdx
+    62                                  
+    63 00000002 BA0F000000              	mov		rdx, 15		; we are going through 16 pokes, counting from 0
+    64                                  .poke:
+    65 00000007 B800000000              	mov		rax, 0		; tell `DumpChar` to poke a '0'
+    66 0000000C E809000000              	call	DumpChar	; insert '0' into hex dump string
+    67 00000011 4883EA01                	sub		rdx, 1		; NOTE: DEC doesn't affect CF
+    68 00000015 73F0                    	jae		.poke		; loop back if RDX >= 0
+    69                                  
+    70 00000017 5A                      	pop		rdx			; restore used registers
+    71 00000018 58                      	pop		rax
+    72 00000019 C3                      	ret					; return to caller
+    73                                  
+    74                                  ;===============================================================================
+    75                                  ; DumpChar:	"Poke" a value into hex dump line string
+    76                                  ; INPUT:		RAX: pass the 8-bit value to be poked in RAX
+    77                                  ;				RDX: pass the value's position in the line (0-15) in RDX
+    78                                  ; RETURN:		<none>
+    79                                  ; MODIFIES:		RAX, ASCLin, DumpLin
+    80                                  ; CALLS:		<none>
+    81                                  ; DESCRIPTION:	The value passed in RAX will be put in both the hex dump
+    82                                  ;				portion and in the ASCII portion, at the position passed
+    83                                  ;				in RDX, represented by a space where it is not a
+    84                                  ;				printable character
+    85                                  
+    86                                  DumpChar:
+    87 0000001A 53                      	push	rbx			; save caller's RBX
+    88 0000001B 57                      	push	rdi			; save caller's RDI
+    89                                  
+    90                                  	; first we insert the input char into ASCII portion of the dump line
+    91 0000001C 8A98[54000000]          	mov		bl,	byte [DotXlat + rax]	; translate nonprintables to '.'
+    92 00000022 889A[32000000]          	mov		byte [ASCLin + rdx + 1], bl ; write to ASCII portion
+    93                                  
+    94                                  	; next we insert the hex equvilant of the input char in the hex portion
+    95                                  	; of the hex dump line
+    96 00000028 4889C3                  	mov		rbx, rax			 ; save second copy of the input char
+    97 0000002B 488D3C52                	lea		rdi, [rdx * 2 + rdx] ; calculate offset into line string (RDX * 3)
+    98                                  
+    99                                  	; look up low nyblle character and insert it into the string
+   100 0000002F 4883E00F                	and		rax, 0x0f					 ; mask out all but the low nybble
+   101 00000033 8A80[44000000]          	mov		al,	byte [HexDigits + rax]   ; look up the char equvialent of nyblle
+   102 00000039 8887[02000000]          	mov		byte [DumpLin + rdi + 2], al ; write the char equvialent to line string
+   103                                  
+   104                                  	; look up high nyblle character and insert it into the string
+   105 0000003F 4881E3F0000000          	and		rbx, 0xf0					 ; mask out all but second lowest nyblle
+   106 00000046 48C1EB04                	shr		rbx, 0x4					 ; shift high 4 bits of byte into low 4 bits
+   107 0000004A 8A9B[44000000]          	mov		bl, byte [HexDigits + rbx]	 ; look up char equivalent of nyblle
+   108 00000050 889F[01000000]          	mov		byte [DumpLin + rdi + 1], bl ; write the char equivalent to line string
+   109                                  
+   110 00000056 5B                      	pop		rbx			; restore caller's RBX
+   111 00000057 5F                      	pop		rdi			; restore caller's RDI
+   112 00000058 C3                      	ret					; return to caller
+   113                                  
+   114                                  ;===============================================================================
+   115                                  ; PrintLine:	display DumpLin to stdout
+   116                                  ; INPUT:		<none>
+   117                                  ; RETURN:		<none>
+   118                                  ; MODIFIES:		<none>
+   119                                  ; CALLS:		Kernel sys_write
+   120                                  ; DESCRIPTION:	The hex dump line string DumpLin is displayed to stdout
+   121                                  ;				using syscall. 
+   122                                  PrintLine:
+   123 00000059 50                      	push rax	; store used registers
+   124 0000005A 57                      	push rdi
+   125 0000005B 56                      	push rsi
+   126 0000005C 52                      	push rdx
+   127                                  
+   128 0000005D BF01000000              	mov		rdi, SYSOUT		; specify file descriptor 1: standard output
+   129 00000062 48BE-                   	mov		rsi, DumpLin	; pass offset of line string
+   129 00000064 [0000000000000000] 
+   130 0000006C BA44000000              	mov		rdx, FULLLEN	; pass size of line string
+   131 00000071 B801000000              	mov		rax, SYS_WRITE	; specify sys_write call
+   132 00000076 0F05                    	syscall
+   133                                  
+   134 00000078 5A                      	pop rdx		; restore used registers
+   135 00000079 5E                      	pop rsi
+   136 0000007A 5F                      	pop rdi
+   137 0000007B 58                      	pop rax
+   138 0000007C C3                      	ret			; return to caller
+   139                                  
+   140                                  
+   141                                  ;===============================================================================
+   142                                  ; LoadBuff:	fills a buffer with data from stdin via syscall sys_read
+   143                                  ; INPUT:		<none>
+   144                                  ; RETURN:		number of bytes in RBP
+   145                                  ; MODIFIES:		RCX, RBP, Buff
+   146                                  ; CALLS:		Kernel sys_write
+   147                                  ; DESCRIPTION:	Loads a buffer full of data (BUFFLEN bytes) from stdin
+   148                                  ;				using syscall sys_read and places it in Buff. Buffer
+   149                                  ;				offset counter RCX is zeroed, because we're starting in
+   150                                  ;				on a new buffer full of data. Caller must test value in
+   151                                  ;				RBP: if RBP contains zero on return, we hit EOF on stdin,
+   152                                  ;				less than 0 in RBP on return indicates some kind of error
+   153                                  LoadBuff:
+   154 0000007D 50                      	push	rax	; save used registers
+   155 0000007E 57                      	push	rdi
+   156 0000007F 56                      	push	rsi
+   157 00000080 52                      	push	rdx
+   158                                  
+   159 00000081 BF00000000              	mov		rdi, SYSIN		; specify file descriptor 0: Standart Input
+   160 00000086 48BE-                   	mov		rsi, Buff		; pass offset of the buffer to read to
+   160 00000088 [0000000000000000] 
+   161 00000090 BA10000000              	mov		rdx, BUFFLEN	; pass number of bytes to read at one pass
+   162 00000095 B800000000              	mov		rax, SYS_READ	; specify sys_read call
+   163 0000009A 0F05                    	syscall
+   164                                  
+   165 0000009C 4889C5                  	mov		rbp, rax	; save number of bytes read from file for later
+   166 0000009F 4831C9                  	xor		rcx, rcx	; clear buffer pointer RCX to 0
+   167                                  
+   168 000000A2 5A                      	pop		rdx ; restore used registers
+   169 000000A3 5E                      	pop		rsi
+   170 000000A4 5F                      	pop		rdi
+   171 000000A5 58                      	pop		rax 
+   172 000000A6 C3                      	ret			; return to caller
+   173                                  
+   174                                  ;===============================================================================
+   175                                  ; MAIN PROGRAM
+   176                                  _start:
+   177                                  	; initialization before scan
+   178 000000A7 4831F6                  	xor		rsi, rsi	; clear total byte counter to 0
+   179 000000AA E8CEFFFFFF              	call	LoadBuff	; read first buffer of data from stdin
+   180 000000AF 4883FD00                	cmp		rbp, 0		; if rbp=0, sys_read reached EOF on stdin
+   181 000000B3 7645                    	jbe		Exit
+   182                                  
+   183                                  ; go through the buffer and convert binary byte values to hex digits:
+   184                                  Scan:
+   185 000000B5 4831C0                  	xor		rax, rax			  ; clear rax to 0
+   186 000000B8 8A81[00000000]          	mov		al, byte [Buff + rcx] ; get a byte from the buffer into AL
+   187 000000BE 4889F2                  	mov		rdx, rsi			  ; copy total counter into RDX
+   188 000000C1 4883E20F                	and		rdx, 0x0f			  ; mask out lowest 4 bits of char counter
+   189 000000C5 E850FFFFFF              	call	DumpChar			  ; call the char poke procedure
+   190                                  
+   191                                  	; bump the buffer pointer to the next character and see if buffer's done
+   192 000000CA 48FFC6                  	inc		rsi			; increment total chars processed counter
+   193 000000CD 48FFC1                  	inc		rcx			; increment buffer pointer
+   194 000000D0 4839E9                  	cmp		rcx, rbp	; compare with # of chars in buffer
+   195 000000D3 720B                    	jb		.modTest	; if we've processed all chars in buffer...
+   196 000000D5 E8A3FFFFFF              	call	LoadBuff	; ... go fill the buffer again
+   197 000000DA 4883FD00                	cmp		rbp, 0		; if rbp=0, sys_read reached EOF on stdin
+   198 000000DE 7615                    	jbe		Done		; if we got EOF, we're done
+   199                                  
+   200                                  ; see if we're at the end of a block of 16 and need to display a line 
+   201                                  .modTest:
+   202 000000E0 48F7C60F000000          	test	rsi, 0x0f	; test 4 lowest bits in counter for 0
+   203 000000E7 75CC                    	jnz		Scan		; if counter is *not* modulo 16, loop back
+   204 000000E9 E86BFFFFFF              	call	PrintLine	; ..otherwise print the line
+   205 000000EE E80DFFFFFF              	call	ClearLine	; clear hex dump line to 0's
+   206 000000F3 EBC0                    	jmp		Scan		; continue scanning the buffer
+   207                                  
+   208                                  ; all done! end this
+   209                                  Done:
+   210 000000F5 E85FFFFFFF              	call	PrintLine	; print the "leftovers" line
+   211                                  
+   212                                  Exit:
+   213 000000FA BF00000000              	mov		rdi, 0			; 0 status code
+   214 000000FF B83C000000              	mov		rax, SYS_EXIT	; sys_exit system call
+   215 00000104 0F05                    	syscall
