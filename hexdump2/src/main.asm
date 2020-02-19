@@ -118,12 +118,14 @@ DumpChar:
 ; CALLS:		Kernel sys_write
 ; DESCRIPTION:	The hex dump line string DumpLin is displayed to stdout
 ;				using syscall. 
+; NOTE:			sys_write uses RAX, RCX, R11 registers
 PrintLine:
 	push rax	; store used registers
 	push rdi
 	push rsi
 	push rdx
 	push rcx
+	push r11
 
 	mov		rdi, SYSOUT		; specify file descriptor 1: standard output
 	mov		rsi, DumpLin	; pass offset of line string
@@ -131,7 +133,8 @@ PrintLine:
 	mov		rax, SYS_WRITE	; specify sys_write call
 	syscall
 
-	pop rcx		; restore used registers
+	pop r11		; restore used registers 
+	pop rcx		
 	pop rdx		
 	pop rsi
 	pop rdi
@@ -144,13 +147,14 @@ PrintLine:
 ; INPUT:		<none>
 ; RETURN:		number of bytes in RBP
 ; MODIFIES:		RCX, RBP, Buff
-; CALLS:		Kernel sys_write
+; CALLS:		Kernel sys_read
 ; DESCRIPTION:	Loads a buffer full of data (BUFFLEN bytes) from stdin
 ;				using syscall sys_read and places it in Buff. Buffer
 ;				offset counter RCX is zeroed, because we're starting in
 ;				on a new buffer full of data. Caller must test value in
 ;				RBP: if RBP contains zero on return, we hit EOF on stdin,
 ;				less than 0 in RBP on return indicates some kind of error
+; NOTE:			sys_read uses RAX, RCX
 LoadBuff:
 	push	rax	; save used registers
 	push	rdi
