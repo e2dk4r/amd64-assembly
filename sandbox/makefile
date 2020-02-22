@@ -34,8 +34,14 @@ LDFLAGS   =
 
 #===============================================================================
 # INSTALL VARIABLES
+DESTDIR ?=
+PREFIX  ?= /usr/local
+BINDIR  := $(PREFIX)/bin
+INSTALL := install -m 755
+
 MKDIR = mkdir -p
 RM    = rm -f
+STRIP = strip
 
 #===============================================================================
 # RULES
@@ -56,4 +62,10 @@ strip: $(BINARY)
 clean:
 > $(RM) $(BINARY) $(OBJECTS)
 
-.PHONY: all clean
+install:
+> $(INSTALL) $(BINARY) $(DESTDIR)$(BINDIR)
+
+uninstall:
+> $(RM) $(DESTDIR)$(BINDIR)/$(BINARY)
+
+.PHONY: all install uninstall strip clean
