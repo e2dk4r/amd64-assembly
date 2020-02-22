@@ -1,6 +1,6 @@
 #===============================================================================
 # MAKE DEFAULTS
-TZ 		  := UTC
+TZ        := UTC
 LC_ALL    := C.UTF-8
 SHELL     := bash
 MAKEFLAGS += --warn-undefined-variables
@@ -24,18 +24,18 @@ OBJECTS := $(patsubst $(SRC_DIR)/%.asm,$(OBJ_DIR)/%.o,$(SOURCES))
 
 #===============================================================================
 # BUILD VARIABLES
-ASM		  = nasm
+ASM       = nasm
 ASMFLAGS  = -f elf64 
 ASMFLAGS += -gdwarf
 ASMFLAGS += -i$(SRC_DIR)
 
-LD		  = ld
+LD        = ld
 LDFLAGS   = 
 
 #===============================================================================
 # INSTALL VARIABLES
 MKDIR = mkdir -p
-RM	  = rm -f
+RM    = rm -f
 
 #===============================================================================
 # RULES
