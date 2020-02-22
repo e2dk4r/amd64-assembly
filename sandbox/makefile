@@ -1,3 +1,5 @@
+#===============================================================================
+# MAKE DEFAULTS
 TZ 		  := UTC
 LC_ALL    := C.UTF-8
 SHELL     := bash
@@ -9,6 +11,8 @@ MAKEFLAGS += --no-builtin-rules
 .DELETE_ON_ERROR:
 .RECIPEPREFIX = >
 
+#===============================================================================
+# PROJECT VARIABLES
 PROJECT := sandbox
 BINARY  := $(PROJECT)
 
@@ -18,25 +22,38 @@ OBJ_DIR := obj
 SOURCES := $(sort $(wildcard $(SRC_DIR)/*.asm))
 OBJECTS := $(patsubst $(SRC_DIR)/%.asm,$(OBJ_DIR)/%.o,$(SOURCES))
 
-ASMFLAGS = -f elf64 
+#===============================================================================
+# BUILD VARIABLES
+ASM		  = nasm
+ASMFLAGS  = -f elf64 
 ASMFLAGS += -gdwarf
 ASMFLAGS += -i$(SRC_DIR)
 
+LD		  = ld
+LDFLAGS   = 
+
+#===============================================================================
+# INSTALL VARIABLES
+MKDIR = mkdir -p
+RM	  = rm -f
+
+#===============================================================================
+# RULES
 all: dirs $(BINARY)
 
 dirs:
-> mkdir -p $(OBJ_DIR)
+> $(MKDIR) $(OBJ_DIR)
 
 $(BINARY): $(OBJECTS)
-> ld -o $@ $^
+> $(LD) -o $@ $^
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.asm
-> nasm $(ASMFLAGS) -o $@ $<
+> $(ASM) $(ASMFLAGS) -o $@ $<
 
 strip: $(BINARY)
-> strip $(BINARY)
+> $(STRIP) $(BINARY)
 
 clean:
-> rm -f $(BINARY) $(OBJECTS)
+> $(RM) $(BINARY) $(OBJECTS)
 
 .PHONY: all clean
