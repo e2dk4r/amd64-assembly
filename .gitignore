@@ -3,3 +3,7 @@
 
 # ignore assembly listings
 *.lst
+
+# ignore libraries
+*.a
+*.so
