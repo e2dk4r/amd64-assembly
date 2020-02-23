@@ -4,6 +4,7 @@
 ;               for linux 64,
 ;               demonstrating the use of escape sequences to do simple
 ;               "full-screen" text output
+; Notes:        see console_codes(4)
 
 ; include linux specific constants
 %include "constants.asm"
@@ -26,7 +27,9 @@ SECTION .data
     CLRLEN:     equ $ - ClrTerm
 
     ; ad message
-    AdMsg:      db "Eat At Joe's"
+    AdMsg:      db 0x1b, "[1;31m"   ; set bold attribute (1) and red foreground (31)
+                db "Eat At Joe's"
+                db 0x1b, "[0m"      ; reset attributes
     ; length of ad message
     ADLEN:      equ $ - AdMsg
 
