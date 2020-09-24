@@ -1,8 +1,4 @@
-;===============================================================================
-; linux specific constants
-%define SYSOUT      1
-%define SYS_WRITE   1
-%define SYS_EXIT    60
+%include "constants.asm"
 
 ;===============================================================================
 ; section containing initialized data

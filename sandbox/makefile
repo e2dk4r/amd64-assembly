@@ -18,6 +18,7 @@ BINARY  := $(PROJECT)
 
 SRC_DIR := src
 OBJ_DIR := obj
+OUT_DIR := out
 
 SOURCES := $(sort $(wildcard $(SRC_DIR)/*.asm))
 OBJECTS := $(patsubst $(SRC_DIR)/%.asm,$(OBJ_DIR)/%.o,$(SOURCES))
@@ -45,25 +46,25 @@ STRIP = strip
 
 #===============================================================================
 # RULES
-all: dirs $(BINARY)
+all: dirs $(OUT_DIR)/$(BINARY)
 
 dirs:
-> $(MKDIR) $(OBJ_DIR)
+> $(MKDIR) $(OBJ_DIR) $(OUT_DIR)
 
-$(BINARY): $(OBJECTS)
+$(OUT_DIR)/$(BINARY): $(OBJECTS)
 > $(LD) -o $@ $^
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.asm
 > $(ASM) $(ASMFLAGS) -o $@ $<
 
-strip: $(BINARY)
-> $(STRIP) $(BINARY)
+strip: $(OUT_DIR)/$(BINARY)
+> $(STRIP) $^
 
 clean:
-> $(RM) $(BINARY) $(OBJECTS)
+> $(RM) $(OUT_DIR)/$(BINARY) $(OBJECTS)
 
 install:
-> $(INSTALL) $(BINARY) $(DESTDIR)$(BINDIR)
+> $(INSTALL) $(OUT_DIR)/$(BINARY) $(DESTDIR)$(BINDIR)
 
 uninstall:
 > $(RM) $(DESTDIR)$(BINDIR)/$(BINARY)

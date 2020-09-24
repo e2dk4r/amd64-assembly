@@ -1,6 +1,9 @@
 # ignore objects
 /**/obj
 
+# ignore binary of projects
+/**/out
+
 # ignore assembly listings
 *.lst
 
