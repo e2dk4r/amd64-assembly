@@ -13,7 +13,7 @@ MAKEFLAGS += --no-builtin-rules
 
 #===============================================================================
 # PROJECT VARIABLES
-PROJECT := showargs1
+PROJECT := showargs2
 BINARY  := $(PROJECT)
 
 SRC_DIR := src
